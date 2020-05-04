@@ -1,0 +1,20 @@
+#table {
+  margin-top: 8px;
+  margin-left: auto;
+  margin-right: auto;
+  table-layout: fixed;
+  /*width: 1080px;*/
+}
+
+td {
+    border: 1px solid #66ccff;
+    width: 25px;
+    height: 25px;
+    background-color: white;
+    transition: background-color 0.2s;
+}
+
+.clicked {
+  background-color: black;
+  transition: background-color 0.2s;
+}
