@@ -1,0 +1,29 @@
+{
+  "name": "pathfinding-visualisation",
+  "version": "1.0.0",
+  "description": "Pathfinding Visualisation",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JoeWadsworth/Pathfinding-Visualisation.git"
+  },
+  "keywords": [
+    "pathfinder",
+    "animation",
+    "p5.js"
+  ],
+  "author": "Joe Wadsworth",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JoeWadsworth/Pathfinding-Visualisation/issues"
+  },
+  "homepage": "https://github.com/JoeWadsworth/Pathfinding-Visualisation#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "p5": "^1.0.0"
+  }
+}
