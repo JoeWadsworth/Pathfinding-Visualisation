@@ -5,7 +5,7 @@ const port = 8001;
 app.use("/public", express.static(__dirname + "/public"))
 
 app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/public/html/index.html");
+  res.sendFile(__dirname + "/index.html");
 })
 
 app.listen(port, () => {
