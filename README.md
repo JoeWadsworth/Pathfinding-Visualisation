@@ -1,5 +1,6 @@
 # Pathfinding-Visualisation
-This is my first attempt at creating a visual path-finding algorithm in Javascript (Node.js and p5.js) which allows the user to interact.
+This is my first attempt at creating a visual pathfinding algorithm in JavaScript which allows the user to interact.
+You can try this out here: https://joewadsworth.github.io/Pathfinding-Visualisation/
 
 ## Information
 __A* Search__: Considered to be the best pathfinding algorithm. This is the only algorithm used so far, but future updates will allow the user to choose an algorithm of their choice, and compare their methods.
