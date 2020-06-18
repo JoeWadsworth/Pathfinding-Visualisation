@@ -14,7 +14,8 @@ var start;
 var end;
 //var widthX = 76;
 //var heightY = 29;
-var board = document.getElementById('board');
+// var board = document.getElementById('board');
+var board = null;
 var grid = new Array(widthX);
 var OpenSet = [];
 var ClosedSet = [];
@@ -34,36 +35,159 @@ function StopStart() {
   }
 }
 
-function Show() {
-  for (var i = 0; i < heightY; i++) {
-    for (var j = 0; j < widthX; j++) {
-      grid[i][j].show();
+function Node(i, j, state) {
+  this.i = i;
+  this.j = j;
+  this.state = state;
+
+  this.f = 0;
+  this.g = 0;
+  this.h = 0;
+
+  this.neighbours = [];
+  this.previous = undefined;
+  this.wall = false;
+
+  // this.show = function(colour) {
+  //   if (this.wall) {
+  //     document.getElementById('table').rows[this.i].cells[this.j].style.backgroundColor = "#000";
+  //   } else if (colour) {
+  //     document.getElementById('table').rows[this.i].cells[this.j].style.backgroundColor = colour;
+  //   }
+  // }
+
+  this.show = function() {
+    document.getElementById(`${this.i}-${this.j}`).className = this.state;
+  }
+
+  this.changeState = function(state) {
+    this.state = state;
+    document.getElementById(`${i}-${j}`).className = this.state;
+    if (this.state == 'wall') {
+      this.wall = true;
+    } else {
+      this.wall = false;
     }
   }
 
-  for (var i = 0; i < ClosedSet.length; i++) {
-    ClosedSet[i].show("#008080");
-  }
+  this.addneighbours = function(grid) {
+    var i = this.i;
+    var j = this.j;
 
-  for (var i = 0; i < OpenSet.length; i++) {
-    OpenSet[i].show("#105060");
+    if (i < heightY - 1) {
+      this.neighbours.push(grid[i+1][j]);
+    }
+    if (i > 0) {
+      this.neighbours.push(grid[i-1][j]);
+    }
+    if (j < widthX - 1) {
+      this.neighbours.push(grid[i][j + 1]);
+    }
+    if (j > 0) {
+      this.neighbours.push(grid[i][j - 1]);
+    }
   }
 }
 
-function CreateGrid(widthX, heightY) {
-  var grid = "<table id='table'>";
+function Board(width, height) {
+  this.width = width;
+  this.height = height;
+  this.start = null;
+  this.finish = null;
+  this.grid = [];
+  this.OpenSet = [];
+  this.ClosedSet = [];
+  this.Path = [];
+}
+
+Board.prototype.initialise = function() {
+  this.createBoard();
+  this.generateWalls();
+  this.addNeighbours();
+  this.userClicks();
+}
+
+Board.prototype.createBoard = function() {
+  let board = "<table id='table'>";
   
-  for ( i = 1; i <= heightY; i++ ) {
-      grid += "<tr>";
-      for ( j = 1; j <= widthX; j++ ) {
-          grid += "<td></td>";
+  for (i = 0; i < this.height; i++) {
+
+      this.grid[i] = new Array(this.width);
+      board += "<tr>";
+
+      for (j = 0; j < this.width; j++) {
+
+        if (i == 0 && j == 0) {
+          var nodeClass = "start";
+        } else if (i == (this.height - 1) && j == (this.width - 1)) {
+          var nodeClass = "finish";
+        } else {
+          var nodeClass = "undefined";
+        }
+
+        this.grid[i][j] = new Node(i,j, nodeClass);
+        board += `<td id='${i}-${j}' class='${nodeClass}'></td>`;
+
       }
-      grid += "</tr>";
+      board += "</tr>";
   }
 
-  document.getElementById('board').innerHTML = grid;
-  return grid;
+  document.getElementById('board').innerHTML = board;
+  //return board;
 }
+
+Board.prototype.generateWalls = function() {
+  for (var i = 0; i < heightY; i++) {
+    for (var j = 0; j < widthX; j++) {
+
+      if (this.grid[i][j].state != "start" && this.grid[i][j].state != "finish") {
+        if(Math.random() < 0.2) {
+          this.grid[i][j].wall = true;
+          this.grid[i][j].state = "wall";
+          document.getElementById(`${i}-${j}`).className = this.grid[i][j].state;
+        }
+      }
+    }
+  }
+}
+
+Board.prototype.addNeighbours = function() {
+  for (var i = 0; i < this.height; i++) {
+    for (var j = 0; j < this.width; j++) {
+      this.grid[i][j].addneighbours(this.grid);
+    }
+  }
+}
+
+Board.prototype.userClicks = function() {
+  document.getElementById('StopStart').onclick = () => {
+    startIt(this);
+  }
+}
+
+Board.prototype.show = function() {
+  for (var i = 0; i < heightY; i++) {
+    for (var j = 0; j < widthX; j++) {
+      document.getElementById(`${i}-${j}`).className = this.grid[i][j].state;
+    }
+  }
+}
+
+// function Show() {
+//   for (var i = 0; i < heightY; i++) {
+//     for (var j = 0; j < widthX; j++) {
+//       board.grid[i][j].newShow();
+//     }
+//   }
+
+//   // for (var i = 0; i < ClosedSet.length; i++) {
+//   //   ClosedSet[i].show("#008080");
+//   // }
+
+//   // for (var i = 0; i < OpenSet.length; i++) {
+//   //   OpenSet[i].show("#105060");
+//   // }
+// }
 
 function RemoveFromArray(array, item) {
   for (var i = array.length - 1; i >= 0; i--) {
@@ -80,177 +204,146 @@ function heuristic(a,b) {
   return d;
 }
 
-function Spot(i,j) {
-  this.i = i;
-  this.j = j;
-
-  this.f = 0;
-  this.g = 0;
-  this.h = 0;
-
-  this.neighbors = [];
-  this.previous = undefined;
-  this.wall = false;
-
-  if(Math.random() < 0.3) {
-    this.wall = true;
-  }
-
-  this.show = function(colour) {
-    if (this.wall) {
-      document.getElementById('table').rows[this.i].cells[this.j].style.backgroundColor = "#000";
-    } else if (colour) {
-      document.getElementById('table').rows[this.i].cells[this.j].style.backgroundColor = colour;
-    }
-  }
-
-  this.addNeighbors = function(grid) {
-    var i = this.i;
-    var j = this.j;
-
-    if (i < heightY - 1) {
-      this.neighbors.push(grid[i+1][j]);
-    }
-    if (i > 0) {
-      this.neighbors.push(grid[i-1][j]);
-    }
-    if (j < widthX - 1) {
-      this.neighbors.push(grid[i][j + 1]);
-    }
-    if (j > 0) {
-      this.neighbors.push(grid[i][j - 1]);
-    }
-  }
-}
-
-// function TableClick() {
-//   console.log("Clickey Click");
-//   console.log(this.parentNode.rowIndex);
-// }
-
-
-
 function setup() {
-  //$("#board").append(CreateGrid(widthX, heightY));
-  CreateGrid(widthX, heightY);
+  //$("#board").append(Board(widthX, heightY));
+  let board = new Board(widthX, heightY);
+  board.initialise();
 
-  for (var i = 0; i < heightY; i++) {
-    grid[i] = new Array(widthX);
-  }
+  // for (var i = 0; i < heightY; i++) {
+  //   grid[i] = new Array(widthX);
+  // }
 
-  for (var i = 0; i < heightY; i++) {
-    for (var j = 0; j < widthX; j++) {
-      grid[i][j] = new Spot(i,j);
-    }
-  }
+  // for (var i = 0; i < heightY; i++) {
+  //   for (var j = 0; j < widthX; j++) {
+  //     grid[i][j] = new Node(i,j);
+  //   }
+  // }
 
-  for (var i = 0; i < heightY; i++) {
-    for (var j = 0; j < widthX; j++) {
-      grid[i][j].addNeighbors(grid);
-    }
-  }
+  board.start = board.grid[0][0];
+  board.finish = board.grid[heightY - 1][widthX - 1];
 
-  start = grid[0][0];
-  end = grid[heightY - 1][widthX - 1];
+  // start.wall = false;
+  // end.wall = false;
 
-  start.wall = false;
-  end.wall = false;
+  board.OpenSet.push(board.start);
 
-  OpenSet.push(start);
-
-  Show();
+  //Show();
+  // for (var i = 0; i < heightY; i++) {
+  //   for (var j = 0; j < widthX; j++) {
+  //     board.grid[i][j].newShow();
+  //   }
+  // }
 
   //Add event to state when the table was clicked.
-  $("td").click(function() {
-      var index = $("td").index(this);
-      var row = Math.floor((index)/widthX);
-      var col = (index % widthX);
-      console.log("Row Index: "+row+", Col Index: "+col);
+  // $("td").click(function() {
+  //     var index = $("td").index(this);
+  //     var row = Math.floor((index)/widthX);
+  //     var col = (index % widthX);
+  //     console.log("Row Index: "+row+", Col Index: "+col);
 
-      var clickedWall = grid[row][col].wall
+  //     var clickedWall = grid[row][col].wall;
 
-      if(current) {
-        grid[row][col].wall = false;
-        $(this).css('background-color', '#FFF');
-      } else {
-        grid[row][col].wall = true;
-        $(this).css('background-color', '#000');
-      }
-  });
+  //     if(current) {
+  //       grid[row][col].wall = false;
+  //       $(this).css('background-color', '#FFF');
+  //     } else {
+  //       grid[row][col].wall = true;
+  //       $(this).css('background-color', '#000');
+  //     }
+  // });
 }
 
-function draw() {
-  if (doDraw || finished) {
-    //Still searching
-    if (OpenSet.length > 0) {
+function startIt(board) {
+  function timeout(index) {
+    setTimeout(function () {
 
-      //Best next option
-      var winner = 0;
-      for(var i = 0; i < OpenSet.length; i++) {
-        if(OpenSet[i].f < OpenSet[winner].f) {
-          winner = i;
+      if (finished) {
+        return;
+      }
+
+      //Still searching
+      if (board.OpenSet.length > 0) {
+
+        //Best next option
+        var winner = 0;
+        for(var i = 0; i < board.OpenSet.length; i++) {
+          if(board.OpenSet[i].f < board.OpenSet[winner].f) {
+            winner = i;
+          }
         }
-      }
 
-      var current = OpenSet[winner];
+        var current = board.OpenSet[winner];
 
-      //If the best option is the end point
-      if(current === end) {
-        console.log("Solution");
-        finished = true;
-        document.getElementById('Status').innerHTML = 'Solution Found';
-        noLoop();
-      }
+        //If the best option is the end point
+        if(current === board.finish) {
+          console.log("Solution");
+          finished = true;
+          document.getElementById('Status').innerHTML = 'Solution Found';
+          return;
+        }
 
-      RemoveFromArray(OpenSet,current);
-      ClosedSet.push(current);
+        // Move from openset to closedset
+        RemoveFromArray(board.OpenSet,current);
+        if(current.state != "start" && current.state != "finish") {
+          current.changeState("closed");
+        }
+        board.ClosedSet.push(current);
 
-      var neighbors = current.neighbors;
-      for (var i = 0; i < neighbors.length; i++) {
-        var neighbor = neighbors[i];
+        var neighbours = current.neighbours;
+        for (var i = 0; i < neighbours.length; i++) {
+          var neighbour = neighbours[i];
 
-        //Ensure neighbor is valid
-        if(!ClosedSet.includes(neighbor) && !neighbor.wall) {
-          var tempG = current.g + heuristic(neighbor,current);
-          var newPath = false;
-          if(OpenSet.includes(neighbor)) {
-            if(tempG < neighbor.g) {
-              neighbor.g = tempG;
+          //Ensure neighbour is valid
+          if(!board.ClosedSet.includes(neighbour) && !neighbour.wall) {
+            var tempG = current.g + heuristic(neighbour,current);
+            var newPath = false;
+            if(board.OpenSet.includes(neighbour)) {
+              if(tempG < neighbour.g) {
+                neighbour.g = tempG;
+                newPath = true;
+              }
+            } else {
+              neighbour.g = tempG;
               newPath = true;
+              if(neighbour.state != "start" && neighbour.state != "finish") {
+                neighbour.changeState("closed");
+              }
+              board.OpenSet.push(neighbour);
             }
-          } else {
-            neighbor.g = tempG;
-            newPath = true;
-            OpenSet.push(neighbor);
-          }
 
-          if(newPath) {
-            neighbor.h = heuristic(neighbor,end);
-            neighbor.f = neighbor.g + neighbor.h;
-            neighbor.previous = current;
+            if(newPath) {
+              neighbour.h = heuristic(neighbour,board.finish);
+              neighbour.f = neighbour.g + neighbour.h;
+              neighbour.previous = current;
+            }
           }
         }
+      } else {
+        console.log("No Solution");
+        finished = true;
+        document.getElementById('Status').innerHTML = 'No Solution';
+        return;
       }
-    } else {
-      console.log("No Solution");
-      finished = true;
-      document.getElementById('Status').innerHTML = 'No Solution';
-      noLoop();
-    }
 
-    Show();
+      //Show();
 
-    var Path = [];
-    var temp = current;
-    Path.push(temp);
+      var Path = [];
+      var temp = current;
+      // temp.state = "path";
+      Path.push(temp);
 
-    while(temp.previous) {
-      Path.push(temp.previous);
-      temp = temp.previous;
-    }
+      while(temp.previous) {
+        // temp.previous.state = "path";
+        Path.push(temp.previous);
+        temp = temp.previous;
+      }
 
       for (i = 0; i < Path.length; i++) {
-      Path[i].show("ff0");
-    }
+        // Path[i].show();
+      }
+
+      timeout(index + 1);
+    }, 0);
   }
+  timeout(0);
 }
