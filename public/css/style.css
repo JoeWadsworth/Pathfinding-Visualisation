@@ -18,3 +18,27 @@ td {
   background-color: black;
   transition: background-color 0.2s;
 }
+
+.start {
+  background-color: rgb(239, 255, 17);
+}
+
+.finish {
+  background-color: rgb(54, 196, 12);
+}
+
+.wall {
+  background-color: rgb(0, 0, 0);
+}
+
+.open {
+  background-color: rgb(30, 137, 170);
+}
+
+.closed {
+  background-color: rgb(23, 95, 95);
+}
+
+.path {
+  background-color: rgb(255, 255, 0);
+}
