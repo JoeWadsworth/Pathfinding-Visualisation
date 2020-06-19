@@ -23,38 +23,16 @@ var Path = [];
 var doDraw = false;
 var finished = false;
 
-function StopStart() {
-  if(doDraw) {
-    doDraw = false;
-    document.getElementById('StopStart').innerHTML = 'Start';
-    document.getElementById('Status').innerHTML = 'Paused';
-  } else {
-    doDraw = true;
-    document.getElementById('StopStart').innerHTML = 'Pause';
-    document.getElementById('Status').innerHTML = 'Calculating..';
-  }
-}
-
 function Node(i, j, state) {
   this.i = i;
   this.j = j;
-  this.state = state;
-
   this.f = 0;
   this.g = 0;
   this.h = 0;
-
+  this.state = state;
   this.neighbours = [];
   this.previous = undefined;
   this.wall = false;
-
-  // this.show = function(colour) {
-  //   if (this.wall) {
-  //     document.getElementById('table').rows[this.i].cells[this.j].style.backgroundColor = "#000";
-  //   } else if (colour) {
-  //     document.getElementById('table').rows[this.i].cells[this.j].style.backgroundColor = colour;
-  //   }
-  // }
 
   this.show = function() {
     document.getElementById(`${this.i}-${this.j}`).className = this.state;
@@ -70,7 +48,16 @@ function Node(i, j, state) {
     }
   }
 
-  this.addneighbours = function(grid) {
+  this.clear = function() {
+    this.changeState("undefined");
+    this.f = 0;
+    this.g = 0;
+    this.h = 0;
+    this.neighbours = [];
+    this.previous = undefined;
+  }
+
+  this.addNeighbours = function(grid) {
     var i = this.i;
     var j = this.j;
 
@@ -94,6 +81,8 @@ function Board(width, height) {
   this.height = height;
   this.start = null;
   this.finish = null;
+  this.calculating = false;
+  this.iterations = 0;
   this.grid = [];
   this.OpenSet = [];
   this.ClosedSet = [];
@@ -133,13 +122,36 @@ Board.prototype.createBoard = function() {
   }
 
   document.getElementById('board').innerHTML = board;
-  //return board;
+}
+
+Board.prototype.restartBoard = function() {
+  document.getElementById("start").innerHTML = "Start";
+  finished = false;
+  this.start = null;
+  this.finish = null;
+  this.iterations = 0;
+  this.OpenSet = [];
+  this.ClosedSet = [];
+  this.Path = [];
+
+  for (var i = 0; i < this.height; i++) {
+    for (var j = 0; j < this.width; j++) {
+      this.grid[i][j].clear();
+    }
+  }
+
+  this.grid[0][0].changeState("start");
+  this.grid[this.height - 1][this.width - 1].changeState("finish");
+  this.generateWalls();
+  this.addNeighbours();
+  this.start = this.grid[0][0];
+  this.finish = this.grid[this.height - 1][this.width - 1];
+  this.OpenSet.push(this.start);
 }
 
 Board.prototype.generateWalls = function() {
-  for (var i = 0; i < heightY; i++) {
-    for (var j = 0; j < widthX; j++) {
-
+  for (var i = 0; i < this.height; i++) {
+    for (var j = 0; j < this.width; j++) {
       if (this.grid[i][j].state != "start" && this.grid[i][j].state != "finish") {
         if(Math.random() < 0.2) {
           this.grid[i][j].wall = true;
@@ -154,14 +166,20 @@ Board.prototype.generateWalls = function() {
 Board.prototype.addNeighbours = function() {
   for (var i = 0; i < this.height; i++) {
     for (var j = 0; j < this.width; j++) {
-      this.grid[i][j].addneighbours(this.grid);
+      this.grid[i][j].addNeighbours(this.grid);
     }
   }
 }
 
 Board.prototype.userClicks = function() {
-  document.getElementById('StopStart').onclick = () => {
-    startIt(this);
+  document.getElementById('start').onclick = () => {
+    if (this.iterations == 0) {
+      document.getElementById('start').disabled = true;
+      document.getElementById('start').innerHTML = 'Calculating..';
+      aStar(this);
+    } else {
+      this.restartBoard();
+    }
   }
 }
 
@@ -172,22 +190,6 @@ Board.prototype.show = function() {
     }
   }
 }
-
-// function Show() {
-//   for (var i = 0; i < heightY; i++) {
-//     for (var j = 0; j < widthX; j++) {
-//       board.grid[i][j].newShow();
-//     }
-//   }
-
-//   // for (var i = 0; i < ClosedSet.length; i++) {
-//   //   ClosedSet[i].show("#008080");
-//   // }
-
-//   // for (var i = 0; i < OpenSet.length; i++) {
-//   //   OpenSet[i].show("#105060");
-//   // }
-// }
 
 function RemoveFromArray(array, item) {
   for (var i = array.length - 1; i >= 0; i--) {
@@ -205,61 +207,25 @@ function heuristic(a,b) {
 }
 
 function setup() {
-  //$("#board").append(Board(widthX, heightY));
   let board = new Board(widthX, heightY);
   board.initialise();
-
-  // for (var i = 0; i < heightY; i++) {
-  //   grid[i] = new Array(widthX);
-  // }
-
-  // for (var i = 0; i < heightY; i++) {
-  //   for (var j = 0; j < widthX; j++) {
-  //     grid[i][j] = new Node(i,j);
-  //   }
-  // }
 
   board.start = board.grid[0][0];
   board.finish = board.grid[heightY - 1][widthX - 1];
 
-  // start.wall = false;
-  // end.wall = false;
-
   board.OpenSet.push(board.start);
-
-  //Show();
-  // for (var i = 0; i < heightY; i++) {
-  //   for (var j = 0; j < widthX; j++) {
-  //     board.grid[i][j].newShow();
-  //   }
-  // }
-
-  //Add event to state when the table was clicked.
-  // $("td").click(function() {
-  //     var index = $("td").index(this);
-  //     var row = Math.floor((index)/widthX);
-  //     var col = (index % widthX);
-  //     console.log("Row Index: "+row+", Col Index: "+col);
-
-  //     var clickedWall = grid[row][col].wall;
-
-  //     if(current) {
-  //       grid[row][col].wall = false;
-  //       $(this).css('background-color', '#FFF');
-  //     } else {
-  //       grid[row][col].wall = true;
-  //       $(this).css('background-color', '#000');
-  //     }
-  // });
 }
 
-function startIt(board) {
+function aStar(board) {
   function timeout(index) {
     setTimeout(function () {
 
       if (finished) {
+        board.calculating = false;
         return;
       }
+
+      board.iterations++;
 
       //Still searching
       if (board.OpenSet.length > 0) {
@@ -278,7 +244,8 @@ function startIt(board) {
         if(current === board.finish) {
           console.log("Solution");
           finished = true;
-          document.getElementById('Status').innerHTML = 'Solution Found';
+          document.getElementById('start').disabled = false;
+          document.getElementById('start').innerHTML = 'Restart';
           return;
         }
 
@@ -321,29 +288,16 @@ function startIt(board) {
       } else {
         console.log("No Solution");
         finished = true;
-        document.getElementById('Status').innerHTML = 'No Solution';
+        document.getElementById('start').disabled = false;
+        document.getElementById('status').innerHTML = 'Restart';
         return;
       }
 
-      //Show();
-
-      var Path = [];
-      var temp = current;
-      // temp.state = "path";
-      Path.push(temp);
-
-      while(temp.previous) {
-        // temp.previous.state = "path";
-        Path.push(temp.previous);
-        temp = temp.previous;
-      }
-
-      for (i = 0; i < Path.length; i++) {
-        // Path[i].show();
-      }
-
       timeout(index + 1);
+
     }, 0);
   }
   timeout(0);
 }
+
+setup();
