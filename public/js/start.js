@@ -1,27 +1,13 @@
+//Pixel size of each cell (square)
+var cellSize = 25;
+
 //Calculate window size
 var screenX = window.innerWidth;
 var screenY = window.innerHeight;
 
-//Pixel size of each cell (square)
-var cellSize = 25;
-
 //Calculate correct size of table
 var widthX = Math.floor(screenX/cellSize);
 var heightY = Math.floor((screenY/cellSize)-6);
-
-//Variables set
-var start;
-var end;
-//var widthX = 76;
-//var heightY = 29;
-// var board = document.getElementById('board');
-var board = null;
-var grid = new Array(widthX);
-var OpenSet = [];
-var ClosedSet = [];
-var Path = [];
-var doDraw = false;
-var finished = false;
 
 function Node(i, j, state) {
   this.i = i;
@@ -32,7 +18,6 @@ function Node(i, j, state) {
   this.state = state;
   this.neighbours = [];
   this.previous = undefined;
-  this.wall = false;
 
   this.show = function() {
     document.getElementById(`${this.i}-${this.j}`).className = this.state;
@@ -41,11 +26,6 @@ function Node(i, j, state) {
   this.changeState = function(state) {
     this.state = state;
     document.getElementById(`${i}-${j}`).className = this.state;
-    if (this.state == 'wall') {
-      this.wall = true;
-    } else {
-      this.wall = false;
-    }
   }
 
   this.clear = function() {
@@ -84,9 +64,9 @@ function Board(width, height) {
   this.calculating = false;
   this.iterations = 0;
   this.grid = [];
-  this.OpenSet = [];
-  this.ClosedSet = [];
-  this.Path = [];
+  this.openSet = [];
+  this.closedSet = [];
+  this.path = [];
 }
 
 Board.prototype.initialise = function() {
@@ -114,7 +94,7 @@ Board.prototype.createBoard = function() {
           var nodeClass = "undefined";
         }
 
-        this.grid[i][j] = new Node(i,j, nodeClass);
+        this.grid[i][j] = new Node(i, j, nodeClass);
         board += `<td id='${i}-${j}' class='${nodeClass}'></td>`;
 
       }
@@ -126,13 +106,13 @@ Board.prototype.createBoard = function() {
 
 Board.prototype.restartBoard = function() {
   document.getElementById("start").innerHTML = "Start";
-  finished = false;
+  this.finished = false;
   this.start = null;
   this.finish = null;
   this.iterations = 0;
-  this.OpenSet = [];
-  this.ClosedSet = [];
-  this.Path = [];
+  this.openSet = [];
+  this.closedSet = [];
+  this.path = [];
 
   for (var i = 0; i < this.height; i++) {
     for (var j = 0; j < this.width; j++) {
@@ -154,9 +134,7 @@ Board.prototype.generateWalls = function() {
     for (var j = 0; j < this.width; j++) {
       if (this.grid[i][j].state != "start" && this.grid[i][j].state != "finish") {
         if(Math.random() < 0.2) {
-          this.grid[i][j].wall = true;
-          this.grid[i][j].state = "wall";
-          document.getElementById(`${i}-${j}`).className = this.grid[i][j].state;
+          this.grid[i][j].changeState("wall")
         }
       }
     }
@@ -191,7 +169,13 @@ Board.prototype.show = function() {
   }
 }
 
-function RemoveFromArray(array, item) {
+Board.prototype.finishAnimation = function(state) {
+  this.finished = true;
+  document.getElementById('start').disabled = false;
+  document.getElementById('start').innerHTML = 'Restart';
+}
+
+function removeFromArray(array, item) {
   for (var i = array.length - 1; i >= 0; i--) {
     if(array[i] === item) {
       array.splice(i,1);
@@ -199,102 +183,122 @@ function RemoveFromArray(array, item) {
   }
 }
 
-function heuristic(a,b) {
+function euclideanDistance(a, b) {
   var x = Math.abs(b.i - a.i);
   var y = Math.abs(b.j - a.j);
-  var d = Math.sqrt(x*x + y*y);
-  return d;
+  return Math.sqrt(x*x + y*y);
+}
+
+function manhattanDistance(a, b) {
+  var x = Math.abs(b.i - a.i);
+  var y = Math.abs(b.j - a.j);
+  return x + y;
 }
 
 function setup() {
   let board = new Board(widthX, heightY);
   board.initialise();
-
   board.start = board.grid[0][0];
   board.finish = board.grid[heightY - 1][widthX - 1];
-
-  board.OpenSet.push(board.start);
+  board.openSet.push(board.start);
 }
 
 function aStar(board) {
   function timeout(index) {
     setTimeout(function () {
 
-      if (finished) {
+      if (board.finished) {
         board.calculating = false;
         return;
       }
 
       board.iterations++;
 
-      //Still searching
-      if (board.OpenSet.length > 0) {
+      // Whilst there are nodes in the openSet
+      if (board.openSet.length > 0) {
 
-        //Best next option
+        // Find the node with the smallest f value, set as the current
         var winner = 0;
-        for(var i = 0; i < board.OpenSet.length; i++) {
-          if(board.OpenSet[i].f < board.OpenSet[winner].f) {
+        for (var i = 0; i < board.openSet.length; i++) {
+          if (board.openSet[i].f < board.openSet[winner].f) {
             winner = i;
           }
         }
 
-        var current = board.OpenSet[winner];
+        var current = board.openSet[winner];
 
-        //If the best option is the end point
-        if(current === board.finish) {
-          console.log("Solution");
-          finished = true;
-          document.getElementById('start').disabled = false;
-          document.getElementById('start').innerHTML = 'Restart';
+        // If the best option is the end point, finish animation
+        if (current === board.finish) {
+          board.finishAnimation("Solution");
           return;
         }
 
-        // Move from openset to closedset
-        RemoveFromArray(board.OpenSet,current);
-        if(current.state != "start" && current.state != "finish") {
+        // Move current from openSet to closedSet
+        removeFromArray(board.openSet, current);
+        if (current.state != "start" && current.state != "finish") {
           current.changeState("closed");
         }
-        board.ClosedSet.push(current);
+        board.closedSet.push(current);
 
+        // Check each of the neighbours of the current node
         var neighbours = current.neighbours;
         for (var i = 0; i < neighbours.length; i++) {
           var neighbour = neighbours[i];
 
-          //Ensure neighbour is valid
-          if(!board.ClosedSet.includes(neighbour) && !neighbour.wall) {
-            var tempG = current.g + heuristic(neighbour,current);
+          // Ignore if neighbour is a wall or in the closedSet
+          if (!board.closedSet.includes(neighbour) && neighbour.state != "wall") {
+
+            var tempG = current.g + manhattanDistance(neighbour, current);
             var newPath = false;
-            if(board.OpenSet.includes(neighbour)) {
-              if(tempG < neighbour.g) {
-                neighbour.g = tempG;
+
+            // If neighbour is in the openSet, check g
+            if (board.openSet.includes(neighbour)) {
+              if (tempG < neighbour.g) {
                 newPath = true;
               }
             } else {
-              neighbour.g = tempG;
               newPath = true;
-              if(neighbour.state != "start" && neighbour.state != "finish") {
+              if (neighbour.state != "start" && neighbour.state != "finish") {
                 neighbour.changeState("closed");
               }
-              board.OpenSet.push(neighbour);
+              board.openSet.push(neighbour);
             }
 
-            if(newPath) {
-              neighbour.h = heuristic(neighbour,board.finish);
+            if (newPath) {
+              neighbour.g = tempG;
+              neighbour.h = manhattanDistance(neighbour, board.finish);
               neighbour.f = neighbour.g + neighbour.h;
               neighbour.previous = current;
             }
           }
         }
       } else {
-        console.log("No Solution");
-        finished = true;
-        document.getElementById('start').disabled = false;
-        document.getElementById('status').innerHTML = 'Restart';
+        board.finishAnimation("No Solution");
         return;
       }
 
-      timeout(index + 1);
+      // Reset path back to blank
+      for (i = 0; i < board.path.length; i++) {
+        if (board.path[i].state != "start" && board.path[i].state != "finish") {
+          board.path[i].changeState("closed");
+        }
+      }
 
+      board.path = [];
+      board.path.push(current);
+
+      while (current.previous) {
+        board.path.push(current.previous);
+        current = current.previous;
+      }
+
+      for (i = 0; i < board.path.length; i++) {
+        if (board.path[i].state != "start" && board.path[i].state != "finish") {
+          board.path[i].changeState("path");
+        }
+      }
+
+      timeout(index++);
     }, 0);
   }
   timeout(0);
