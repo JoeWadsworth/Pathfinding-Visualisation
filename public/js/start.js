@@ -61,7 +61,6 @@ function Board(width, height) {
   this.height = height;
   this.start = null;
   this.finish = null;
-  this.calculating = false;
   this.iterations = 0;
   this.grid = [];
   this.openSet = [];
@@ -126,7 +125,7 @@ Board.prototype.restartBoard = function() {
   this.addNeighbours();
   this.start = this.grid[0][0];
   this.finish = this.grid[this.height - 1][this.width - 1];
-  this.OpenSet.push(this.start);
+  this.openSet.push(this.start);
 }
 
 Board.prototype.generateWalls = function() {
@@ -206,11 +205,6 @@ function setup() {
 function aStar(board) {
   function timeout(index) {
     setTimeout(function () {
-
-      if (board.finished) {
-        board.calculating = false;
-        return;
-      }
 
       board.iterations++;
 
