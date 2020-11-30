@@ -1,12 +1,22 @@
 <html>
   <head>
     <title>Pathfinder - Joe Wadsworth</title>
+    <meta name="author" content="Joe Wadsworth">
     <meta property="og:title" content="Pathfinding Visualisation - Joe Wadsworth">
     <meta property="og:description" content="Implementation of the A* search algorithm."><meta
       name="image"
       property="og:image"
       content="https://joewadsworth.github.io/Pathfinding-Visualisation/screenshots/pathfinder-solution.png"
     >
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-T1YDT92Z69"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-T1YDT92Z69');
+    </script>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
     <link rel="stylesheet" href="public/css/style.css"/>
   </head>
@@ -19,20 +29,20 @@
 
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
-          <!-- <li class="nav-item">
-            <div class="dropdown">
-              <button class="btn btn-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                Mazes
-              </button>
-              <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                <a class="dropdown-item" id="basicMaze">Basic Maze</a>
-              </div>
-            </div>
-          </li> -->
+<!--          <li class="nav-item">-->
+<!--            <div class="dropdown">-->
+<!--              <button class="btn btn-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">-->
+<!--                Mazes-->
+<!--              </button>-->
+<!--              <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">-->
+<!--                <a class="dropdown-item" id="basic-maze">Basic Maze</a>-->
+<!--              </div>-->
+<!--            </div>-->
+<!--          </li>-->
         </ul>
-        
+
         <form class="form-inline my-2 my-lg-0">
-          <button class="btn btn-outline-sc my-2 my-sm-0" id="start" type="button">Start</button>
+          <button class="btn btn-outline-sc my-2 my-sm-0" id="control" type="button">Start</button>
         </form>
       </div>
     </nav>
@@ -42,5 +52,7 @@
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
-  <script src='public/js/start.js'></script>
+  <script src="public/js/Board.js"></script>
+  <script src="public/js/Node.js"></script>
+  <script src="public/js/index.js"></script>
 </html>

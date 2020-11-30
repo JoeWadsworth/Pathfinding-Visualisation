@@ -11,12 +11,12 @@ td {
     width: 25px;
     height: 25px;
     background-color: white;
-    transition: background-color 0.2s;
+    transition: background-color 0.05s;
 }
 
 .clicked {
   background-color: black;
-  transition: background-color 0.2s;
+  transition: background-color 0.05s;
 }
 
 .start {
